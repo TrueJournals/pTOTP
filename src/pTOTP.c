@@ -22,7 +22,7 @@
 
 Window *window;
 
-TextLayer *currentKey, *currentCode, *currentTime, *currentOffset;
+TextLayer *currentKey, *currentCode, *currentTime, *currentOffset, *currentDST;
 
 Layer *barLayer;
 
@@ -32,6 +32,8 @@ unsigned short keyIndex = 0;
 unsigned short timeZoneIndex = 0;
 
 bool isDST = false;
+bool changedDST = true;
+static char DSTbuffer[4] = "   ";
 
 static char codeDisplayBuffer[7] = "000000";
 void redraw(unsigned int code) {  
@@ -42,6 +44,13 @@ void redraw(unsigned int code) {
 
   text_layer_set_text(currentCode, codeDisplayBuffer);
 }
+
+void redrawDST() {
+  if(isDST) strcpy(DSTbuffer, "DST");
+  else      strcpy(DSTbuffer, "   ");
+  text_layer_set_text(currentDST, DSTbuffer);
+}
+  
 
 
 bool freshCode = true;
@@ -54,8 +63,11 @@ void recode(char *secretKey, bool keyChange) {
   static char offsetText[] = "-12:00";
 
   const char *key = secretKey;
+  
+  if(changedDST)
+    redrawDST();
 
-  if(timeZoneIndex != oldTimeZoneIndex) {
+  if(timeZoneIndex != oldTimeZoneIndex || changedDST) {
     text_layer_set_text(currentTime, tz_names[timeZoneIndex]);
     oldTimeZoneIndex = timeZoneIndex;
     offset = (tz_offsets[timeZoneIndex]+(isDST ? 3600 : 0));
@@ -128,7 +140,6 @@ void up_single_click_handler(ClickRecognizerRef recognizer, void *window) {
   reload();
 }
 
-
 void down_single_click_handler(ClickRecognizerRef recognizer, void *window) {
   (void)recognizer;
   (void)window;
@@ -153,10 +164,21 @@ void select_single_click_handler(ClickRecognizerRef recognizer, void *window) {
   //TODO
 }
 
+void select_long_click_handler(ClickRecognizerRef recognizer, void * window) {
+  (void)recognizer;
+  (void)window;
+  
+  isDST = !isDST;
+  changedDST = true;
+  
+  reload();
+}
+
 // This usually won't need to be modified
 
 void click_config_provider(void * context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, select_single_click_handler);
+  window_long_click_subscribe(BUTTON_ID_SELECT, 0, select_long_click_handler, NULL);
 
   window_single_repeating_click_subscribe(BUTTON_ID_UP, 100, up_single_click_handler);
 
@@ -229,15 +251,20 @@ void handle_init() {
   text_layer_set_text_alignment(currentCode, GTextAlignmentCenter);
   layer_add_child(rootLayer, text_layer_get_layer(currentCode));
 
-  currentTime = text_layer_create(GRect(0,rootLayerRect.size.h-(15+22),(rootLayerRect.size.w/3)*2,22));
+  currentTime = text_layer_create(GRect(0,rootLayerRect.size.h-(15+44),(rootLayerRect.size.w/3)*2,44));
   text_layer_set_font(currentTime, fonts_get_system_font(FONT_KEY_GOTHIC_18));
   text_layer_set_text_alignment(currentTime, GTextAlignmentLeft);
   layer_add_child(rootLayer, text_layer_get_layer(currentTime));
 
-  currentOffset = text_layer_create(GRect((rootLayerRect.size.w/3)*2,rootLayerRect.size.h-(15+22),rootLayerRect.size.w/3,22));
+  currentOffset = text_layer_create(GRect((rootLayerRect.size.w/3)*2,rootLayerRect.size.h-(15+44),rootLayerRect.size.w/3,44));
   text_layer_set_font(currentOffset, fonts_get_system_font(FONT_KEY_GOTHIC_18));
   text_layer_set_text_alignment(currentOffset, GTextAlignmentRight);
   layer_add_child(rootLayer, text_layer_get_layer(currentOffset));
+  
+  currentDST = text_layer_create(GRect((rootLayerRect.size.w/3)*2, rootLayerRect.size.h-(15+22), rootLayerRect.size.w/3, 22));
+  text_layer_set_font(currentDST, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+  text_layer_set_text_alignment(currentDST, GTextAlignmentRight);
+  layer_add_child(rootLayer, text_layer_get_layer(currentDST));
 
   // Attach our desired button functionality
   window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
