@@ -516,24 +516,24 @@
                         replace32(resources, header, crc, name);
                     }
 
-                    replaceResource(40, 4124, timezone, "timezone");
-                    replaceResource(56, 4126, keyBlock, "secret keys");
-                    replaceResource(72, 4389, nameBlock, "key names");
-                    replaceResource(88, 4652, keyCount, "key count");
-                    replaceResource(104, 4653, isDST, "DST");
+                    replaceResource(0x18, 0x100c, timezone, "timezone");
+                    replaceResource(0x28, 0x100e, keyBlock, "secret keys");
+                    replaceResource(0x38, 0x1115, nameBlock, "key names");
+                    replaceResource(0x48, 0x121c, keyCount, "key count");
+                    replaceResource(0x58, 0x121d, isDST, "DST");
 
-                    var resource_crc = crc32_a(resources.subarray(4124));
+                    var resource_crc = crc32_a(resources.subarray(0x100c));
 
                     replace32(resources, 4, resource_crc, "master resource");
 
-                    replace32(pebbleapp, 124, resource_crc, "app resources");
+                    //replace32(pebbleapp, 124, resource_crc, "app resources");
 
                     manifest['resources']['crc'] = crc32_a(resources);
 
                     // 124 is the length of the header.
                     // 3896 is where the reloc table begins.
                     // In the future we'll follow the table to get these.
-                    replace32(pebbleapp, 20, crc32_a(pebbleapp.subarray(124,3896)), "master app")
+                    //replace32(pebbleapp, 20, crc32_a(pebbleapp.subarray(124,3896)), "master app")
 
                     zip.file("app_resources.pbpack", resources);
                     zip.file("manifest.json", JSON.stringify(manifest));
