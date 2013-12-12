@@ -526,7 +526,7 @@
 
                     replace32(resources, 4, resource_crc, "master resource");
 
-                    //replace32(pebbleapp, 124, resource_crc, "app resources");
+                    replace32(pebbleapp, 0x78, resource_crc, "app resources");
 
                     manifest['resources']['crc'] = crc32_a(resources);
 
