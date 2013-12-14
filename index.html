@@ -536,7 +536,7 @@
                     //replace32(pebbleapp, 20, crc32_a(pebbleapp.subarray(124,3896)), "master app")
 
                     zip.file("app_resources.pbpack", resources);
-                    zip.file("manifest.json", JSON.stringify(manifest));
+                    zip.file("manifest.json", JSON.stringify(manifest).replace(/:/g, ": ").replace(/,/g, ", "));
                     zip.file("pebble-app.bin", pebbleapp);
 
                     var blob = zip.generate({type:"blob"});
